@@ -143,6 +143,7 @@ setup(
         ],
         'asreview.datasets': [
             'benchmark = asreview.datasets:BenchmarkDataGroup',
+            'paper_asreview = asreview.datasets:ASReviewPaperDataGroup',
         ],
         'asreview.models.classifiers': [
             'svm = asreview.models.classifiers:SVMClassifier',

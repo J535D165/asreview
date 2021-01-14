@@ -343,9 +343,22 @@ class DatasetManager():
         return dataset_list
 
 
+class ASReviewPaperDataGroup(BaseDataGroup):
+    group_id = "paper_asreview"
+    description = "A collection of labeled datasets used in ASReview paper."
+
+    def __init__(self):
+        meta_file = "https://raw.githubusercontent.com/asreview/paper_asreview/master/index.json"  # noqa
+        datasets = download_from_metadata(meta_file)
+
+        super(ASReviewPaperDataGroup, self).__init__(
+            *datasets
+        )
+
+
 class BenchmarkDataGroup(BaseDataGroup):
     group_id = "benchmark"
-    description = "A collections of labeled datasets for benchmarking."
+    description = "A collection of labeled datasets for benchmarking."
 
     def __init__(self):
         meta_file = "https://raw.githubusercontent.com/asreview/systematic-review-datasets/master/index.json"  # noqa
