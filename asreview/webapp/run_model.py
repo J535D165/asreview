@@ -30,59 +30,6 @@ from asreview.review.base import BaseReview
 from asreview.webapp.io import read_data
 
 
-def get_lab_reviewer(
-    as_data,
-    project,
-    embedding_fp=None,
-    verbose=0,
-    prior_idx=None,
-    prior_record_id=None,
-    seed=None,
-    **kwargs,
-):
-    """Get a review object from arguments."""
-
-    if len(as_data) == 0:
-        raise ValueError("Supply at least one dataset" " with at least one record.")
-
-    with open_state(project) as state:
-        settings = state.settings
-
-    # TODO: Set random seed.
-    # Initialize models.
-    # random_state = get_random_state(seed)
-    classifier_model = get_classifier(settings.model)
-    query_model = get_query_model(settings.query_strategy)
-    balance_model = get_balance_model(settings.balance_strategy)
-    feature_model = get_feature_model(settings.feature_extraction)
-
-    # LSTM models need embedding matrices.
-    if classifier_model.name.startswith("lstm-"):
-        classifier_model.embedding_matrix = feature_model.get_embedding_matrix(
-            as_data.texts, embedding_fp
-        )
-
-    # prior knowledge
-    if (
-        prior_idx is not None
-        and prior_record_id is not None
-        and len(prior_idx) > 0
-        and len(prior_record_id) > 0
-    ):
-        raise ValueError("Not possible to provide both prior_idx and prior_record_id")
-
-    reviewer = BaseReview(
-        as_data,
-        project,
-        model=classifier_model,
-        query_model=query_model,
-        balance_model=balance_model,
-        feature_model=feature_model,
-        **kwargs,
-    )
-    return reviewer
-
-
 def train_model(project):
     """Add the new labels to the review and do the modeling.
 
@@ -104,7 +51,23 @@ def train_model(project):
             # collect command line arguments and pass them to the reviewer
             as_data = read_data(project)
 
-            reviewer = get_lab_reviewer(as_data, project)
+            with open_state(project) as state:
+                settings = state.settings
+
+            classifier_model = get_classifier(settings.model)
+            query_model = get_query_model(settings.query_strategy)
+            balance_model = get_balance_model(settings.balance_strategy)
+            feature_model = get_feature_model(settings.feature_extraction)
+
+            reviewer = BaseReview(
+                as_data,
+                project,
+                model=classifier_model,
+                query_model=query_model,
+                balance_model=balance_model,
+                feature_model=feature_model,
+                **kwargs,
+            )
 
             # Train the model.
             reviewer.train()

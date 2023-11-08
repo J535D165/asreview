@@ -177,8 +177,13 @@ class BaseReview(ABC):
 
         # While the stopping condition has not been met:
         while not self._stop_review():
+
             # Train a new model.
-            self.train()
+            try:
+                self.train()
+            except ValueError as err:
+                if "Not both labels available" not in str(err):
+                    raise err
 
             # Query for new records to label.
             record_ids = self._query(self.n_instances)
@@ -278,10 +283,11 @@ class BaseReview(ABC):
         with open_state(self.project) as state:
             labeled = state.get_labeled()
             labels = labeled["label"].to_list()
+
             training_set = len(labeled)
             if not (0 in labels and 1 in labels):
                 raise ValueError(
-                    "Not both labels available. " "Stopped training the model"
+                    "Not both labels available. Stopped training the model"
                 )
 
         # TODO: Simplify balance model input.

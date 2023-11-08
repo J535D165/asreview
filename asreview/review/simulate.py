@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from datetime import datetime
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -159,12 +160,7 @@ class ReviewSimulate(BaseReview):
 
         # Setup the reviewer attributes that take over the role of state
         # functions.
-        with open_state(self.project) as state:
-            # Check if there is already a ranking stored in the state.
-            if state.model_has_trained:
-                self.last_ranking = state.get_last_ranking()
-            else:
-                self.last_ranking = None
+        with open_state(self.project, read_only=False) as state:
 
             self.labeled = state.get_labeled()
             self.pool = pd.Series(
@@ -176,6 +172,22 @@ class ReviewSimulate(BaseReview):
             )
             self.training_set = len(self.labeled)
 
+            # Fill the ranking table on init
+            state.add_last_ranking(
+                as_data.df.index.tolist(),
+                None,
+                "naive",
+                None,
+                None,
+                0,
+            )
+
+            # Check if there is already a ranking stored in the state.
+            # if state.model_has_trained:
+            self.last_ranking = state.get_last_ranking()
+            # else:
+            #     self.last_ranking = None
+
             # Get the number of queries.
             training_sets = state.get_training_sets()
             # There is one query per trained model. We subtract 1
@@ -186,10 +198,9 @@ class ReviewSimulate(BaseReview):
             if (0 not in self.labeled["label"].values) or (
                 1 not in self.labeled["label"].values
             ):
-                raise ValueError(
-                    "Not both labels available Make sure there"
-                    " is an included and excluded record in "
-                    "the priors."
+                warnings.warn(
+                    "Start without active learning as no included and "
+                    "excluded record in the priors"
                 )
 
         self.results = pd.DataFrame(
@@ -255,6 +266,12 @@ class ReviewSimulate(BaseReview):
         # Use the balance model to sample the trainings data.
         new_training_set = len(self.labeled)
 
+        if not (0 in self.labeled["label"].to_numpy()
+                and 1 in self.labeled["label"].to_numpy()):
+            raise ValueError(
+                "Not both labels available. Stopped training the model"
+            )
+
         y_sample_input = (
             pd.DataFrame(self.record_table)
             .merge(self.labeled, how="left", on="record_id")
@@ -286,6 +303,7 @@ class ReviewSimulate(BaseReview):
         """In simulation mode, the query function should get the n highest
         ranked unlabeled records, without writing the model data to the results
         table. The"""
+
         unlabeled_ranking = self.last_ranking[
             self.last_ranking["record_id"].isin(self.pool)
         ]
@@ -338,6 +356,7 @@ class ReviewSimulate(BaseReview):
     def _write_to_state(self):
         """Write the data that has not yet been written to the state."""
         # Write the data to the state.
+
         if len(self.results) > 0:
             rows = [tuple(self.results.iloc[i]) for i in range(len(self.results))]
             with open_state(self.project, read_only=False) as state:
