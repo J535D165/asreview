@@ -183,10 +183,7 @@ class ReviewSimulate(BaseReview):
             )
 
             # Check if there is already a ranking stored in the state.
-            # if state.model_has_trained:
             self.last_ranking = state.get_last_ranking()
-            # else:
-            #     self.last_ranking = None
 
             # Get the number of queries.
             training_sets = state.get_training_sets()
@@ -303,7 +300,6 @@ class ReviewSimulate(BaseReview):
         """In simulation mode, the query function should get the n highest
         ranked unlabeled records, without writing the model data to the results
         table. The"""
-
         unlabeled_ranking = self.last_ranking[
             self.last_ranking["record_id"].isin(self.pool)
         ]
@@ -356,7 +352,6 @@ class ReviewSimulate(BaseReview):
     def _write_to_state(self):
         """Write the data that has not yet been written to the state."""
         # Write the data to the state.
-
         if len(self.results) > 0:
             rows = [tuple(self.results.iloc[i]) for i in range(len(self.results))]
             with open_state(self.project, read_only=False) as state:

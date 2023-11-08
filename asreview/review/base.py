@@ -283,7 +283,6 @@ class BaseReview(ABC):
         with open_state(self.project) as state:
             labeled = state.get_labeled()
             labels = labeled["label"].to_list()
-
             training_set = len(labeled)
             if not (0 in labels and 1 in labels):
                 raise ValueError(
