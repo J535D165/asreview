@@ -1242,6 +1242,7 @@ def api_export_dataset(project):
             state_df[f"exported_notes_{screening}"], on="record_id"
         )
 
+
         # keep labels in exploration mode
         keep_old_labels = project.config["mode"] == PROJECT_MODE_EXPLORE
 
