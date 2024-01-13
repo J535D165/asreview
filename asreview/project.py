@@ -48,7 +48,6 @@ from scipy.sparse import load_npz
 from scipy.sparse import save_npz
 
 from asreview._version import get_versions
-from asreview.config import LABEL_NA
 from asreview.config import PROJECT_MODE_EXPLORE
 from asreview.config import PROJECT_MODE_ORACLE
 from asreview.config import PROJECT_MODE_SIMULATE
@@ -338,7 +337,7 @@ class ASReviewProject:
         as_data = ASReviewData.from_file(fp_data)
 
         if self.config["mode"] == PROJECT_MODE_SIMULATE and (
-            (as_data.label_included == LABEL_NA).any()
+            ((as_data.label_included != 1) & (as_data.label_included != 0)).any()
         ):
             raise ValueError("Import fully labeled dataset")
 
@@ -355,7 +354,9 @@ class ASReviewProject:
 
             # if the data contains labels and oracle mode, add them to the state file
             if self.config["mode"] == PROJECT_MODE_ORACLE:
-                labeled_indices = np.where(as_data.label_included != LABEL_NA)[0]
+                labeled_indices = np.where(
+                    (as_data.label_included == 1) | (as_data.label_included == 0)
+                )[0]
                 labels = as_data.label_included[labeled_indices].tolist()
                 labeled_record_ids = as_data.record_ids[labeled_indices].tolist()
 

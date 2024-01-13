@@ -21,7 +21,6 @@ import pandas as pd
 from filelock import FileLock
 from filelock import Timeout
 
-from asreview.config import LABEL_NA
 from asreview.config import PROJECT_MODE_SIMULATE
 from asreview.models.balance import get_balance_model
 from asreview.models.classifiers import get_classifier
@@ -80,12 +79,10 @@ def _run_model_start(project, output_error=True):
             # Use the balance model to sample the trainings data.
             y_sample_input = (
                 pd.DataFrame(record_table)
-                .merge(labeled, how="left", on="record_id")
-                .loc[:, "label"]
-                .fillna(LABEL_NA)
+                .merge(labeled, how="left", on="record_id")["label"]
                 .to_numpy()
             )
-            train_idx = np.where(y_sample_input != LABEL_NA)[0]
+            train_idx = np.where((y_sample_input == 1) | (y_sample_input == 0))[0]
 
             balance_model = get_balance_model(settings.balance_strategy)
             X_train, y_train = balance_model.sample(fm, y_sample_input, train_idx)

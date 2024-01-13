@@ -21,7 +21,6 @@ import pandas as pd
 from tqdm import tqdm
 
 from asreview.config import DEFAULT_N_INSTANCES
-from asreview.config import LABEL_NA
 from asreview.models.balance.simple import SimpleBalance
 from asreview.models.classifiers import NaiveBayesClassifier
 from asreview.models.feature_extraction.tfidf import Tfidf
@@ -349,12 +348,10 @@ class Simulate:
 
         y_sample_input = (
             pd.DataFrame(self.record_table)
-            .merge(self.labeled, how="left", on="record_id")
-            .loc[:, "label"]
-            .fillna(LABEL_NA)
+            .merge(self.labeled, how="left", on="record_id")["label"]
             .to_numpy()
         )
-        train_idx = np.where(y_sample_input != LABEL_NA)[0]
+        train_idx = np.where((y_sample_input == 0) | (y_sample_input == 1))[0]
 
         X_train, y_train = self.balance_model.sample(
             self._feature_matrix, y_sample_input, train_idx
