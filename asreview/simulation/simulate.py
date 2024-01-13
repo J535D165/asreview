@@ -143,8 +143,6 @@ class Simulate:
 
         # Get the known labels.
         self.data_labels = as_data.labels
-        if self.data_labels is None:
-            self.data_labels = np.full(len(as_data), LABEL_NA)
 
         with open_state(self.project, read_only=False):
             pass

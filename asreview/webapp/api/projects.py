@@ -687,9 +687,7 @@ def api_random_prior_papers(project):  # noqa: F401
 
     as_data = project.read_data()
 
-    if subset in ["relevant", "irrelevant"] and as_data.labels is None:
-        indices = []
-    elif subset in ["relevant", "irrelevant", "not_seen"]:
+    if subset in ["relevant", "irrelevant", "not_seen"]:
         indices = as_data.df[as_data.labels == label].index.values
     else:
         indices = as_data.df.index.values
