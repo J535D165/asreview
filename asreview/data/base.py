@@ -354,12 +354,7 @@ class ASReviewData:
         return convert_array[self.prior_idx]
 
     @property
-    def included(self):
-        # deprecate this in the future
-        return self.labels
-
-    @property
-    def labels(self):
+    def label_included(self):
         try:
             column = self.column_spec["included"]
             return self.df[column].values

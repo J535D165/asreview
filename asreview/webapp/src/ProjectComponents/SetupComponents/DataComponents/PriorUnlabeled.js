@@ -81,7 +81,7 @@ const PriorUnlabeled = (props) => {
                     included:
                       record.id === variables.doc_id
                         ? variables.label
-                        : record.included,
+                        : record.label_included,
                   };
                 }),
               };
@@ -108,7 +108,7 @@ const PriorUnlabeled = (props) => {
                     included:
                       record.id === variables.doc_id
                         ? variables.label
-                        : record.included,
+                        : record.label_included,
                   };
                 }),
               };

@@ -103,9 +103,9 @@ def format_record(record, use_cli_colors=True):
     else:
         abstract = ""
 
-    if record.included == 0:
+    if record.label_included == 0:
         label = "IRRELEVANT"
-    elif record.included == 1:
+    elif record.label_included == 1:
         label = "RELEVANT"
     else:
         label = ""
@@ -178,6 +178,17 @@ class PaperRecord:
 
     def __str__(self):
         return format_record(self)
+
+    @property
+    def label_included(self):
+        """Return the label of the paper.
+
+        Returns
+        -------
+        int:
+            The label of the paper.
+        """
+        return self.included
 
     @property
     def text(self):

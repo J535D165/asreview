@@ -136,7 +136,7 @@ const PriorRandom = (props) => {
   React.useEffect(() => {
     if (
       data?.result.length &&
-      !data?.result.filter((record) => record?.included === null).length
+      !data?.result.filter((record) => record?.label_included === null).length
     ) {
       setRefresh(true);
     }
@@ -228,7 +228,7 @@ const PriorRandom = (props) => {
                   <InfoCard info="Label records that you want to use as prior knowledge" />
                 </Box>
                 {data?.result
-                  .filter((record) => record?.included === null)
+                  .filter((record) => record?.label_included === null)
                   .map((record, index) => (
                     <PriorUnlabeled
                       record={record}

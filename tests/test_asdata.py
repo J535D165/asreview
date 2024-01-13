@@ -20,7 +20,7 @@ def test_record_id():
     as_data = ASReviewData.from_file(data_fp)
 
     # test is labels are numpy array
-    assert isinstance(as_data.labels, np.ndarray)
+    assert isinstance(as_data.label_included, np.ndarray)
 
     # test is index name is record_id
     assert as_data.df.index.name == "record_id"

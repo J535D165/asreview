@@ -16,7 +16,7 @@ def test_asreview_labels_ris(test_file, tmpdir):
 
     # Check if input file matches the export file
     assert list(asr_data.title) == list(asr_data_diff.title)
-    assert list(asr_data.labels) == list(asr_data_diff.labels)
+    assert list(asr_data.label_included) == list(asr_data_diff.label_included)
 
 
 @mark.parametrize("test_file", [("baseline_tag-notes.ris")])

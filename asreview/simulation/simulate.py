@@ -137,12 +137,14 @@ class Simulate:
         if len(as_data) == 0:
             raise ValueError("Supply a dataset with at least one record.")
 
-        labeled_idx = np.where((as_data.labels == 0) | (as_data.labels == 1))[0]
-        if len(labeled_idx) != len(as_data.labels):
+        labeled_idx = np.where(
+            (as_data.label_included == 0) | (as_data.label_included == 1)
+        )[0]
+        if len(labeled_idx) != len(as_data.label_included):
             raise ValueError("Expected fully labeled dataset.")
 
         # Get the known labels.
-        self.data_labels = as_data.labels
+        self.data_labels = as_data.label_included
 
         with open_state(self.project, read_only=False):
             pass
@@ -213,13 +215,13 @@ class Simulate:
                 and self.n_prior_included + self.n_prior_excluded > 0
             ):
                 self.start_idx = sample_prior_knowledge(
-                    self.as_data.labels,
+                    self.as_data.label_included,
                     self.n_prior_included,
                     self.n_prior_excluded,
                     random_state=self.init_seed,
                 )
             else:
-                self.start_idx = naive_prior_knowledge(self.as_data.labels)
+                self.start_idx = naive_prior_knowledge(self.as_data.label_included)
 
         if self.start_idx is None:
             self.start_idx = []
@@ -289,7 +291,7 @@ class Simulate:
         # progress bars
         pbar_rel = tqdm(
             initial=sum(labels_prior),
-            total=sum(self.as_data.labels),
+            total=sum(self.as_data.label_included),
             desc="Relevant records found",
         )
         pbar_total = tqdm(

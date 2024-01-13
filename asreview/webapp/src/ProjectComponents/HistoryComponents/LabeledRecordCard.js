@@ -87,7 +87,7 @@ const LabeledRecordCard = (props) => {
                       ...value,
                       included:
                         value.id !== variables.doc_id
-                          ? value.included
+                          ? value.label_included
                           : variables.label,
                       note:
                         value.id !== variables.doc_id
@@ -122,7 +122,7 @@ const LabeledRecordCard = (props) => {
     mutate({
       project_id: returnProjectId(),
       doc_id: value.id,
-      label: value.included === 1 ? 0 : 1,
+      label: value.label_included === 1 ? 0 : 1,
       note: !value.note ? "" : value.note,
       initial: false,
       is_prior: !props.is_prior ? 0 : 1,
@@ -176,7 +176,7 @@ const LabeledRecordCard = (props) => {
         )}
         {!isError &&
           props.page.result
-            .filter((value) => value.included !== -1)
+            .filter((value) => value.label_included !== -1)
             .map((value) => (
               <Card elevation={3} className={classes.root} key={value.id}>
                 <CardContent className="record-card-content">
@@ -243,7 +243,7 @@ const LabeledRecordCard = (props) => {
                         ? disableConvertPrior(value.prior)
                           ? "Prior knowledge cannot be converted"
                           : note.editing !== value.id
-                            ? value.included === 1
+                            ? value.label_included === 1
                               ? "Convert to irrelevant"
                               : "Convert to relevant"
                             : "Save note before converting"
@@ -262,7 +262,7 @@ const LabeledRecordCard = (props) => {
                           handleClickLabelConvert(value);
                         }}
                       >
-                        {value.included === 1 ? (
+                        {value.label_included === 1 ? (
                           <Favorite
                             color="error"
                             fontSize={!props.mobileScreen ? "medium" : "small"}
@@ -278,7 +278,7 @@ const LabeledRecordCard = (props) => {
                   {props.is_prior && (
                     <Tooltip
                       title={`Remove ${
-                        value.included !== 1 ? "irrelevant" : "relevant"
+                        value.label_included !== 1 ? "irrelevant" : "relevant"
                       } label`}
                     >
                       <span>

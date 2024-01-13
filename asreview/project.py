@@ -338,12 +338,12 @@ class ASReviewProject:
         as_data = ASReviewData.from_file(fp_data)
 
         if self.config["mode"] == PROJECT_MODE_SIMULATE and (
-            (as_data.labels == LABEL_NA).any()
+            (as_data.label_included == LABEL_NA).any()
         ):
             raise ValueError("Import fully labeled dataset")
 
         if self.config["mode"] == PROJECT_MODE_EXPLORE and not (
-            (as_data.labels == 1).any() and (as_data.labels == 0).any()
+            (as_data.label_included == 1).any() and (as_data.label_included == 0).any()
         ):
             raise ValueError("Import partially or fully labeled dataset")
 
@@ -355,8 +355,8 @@ class ASReviewProject:
 
             # if the data contains labels and oracle mode, add them to the state file
             if self.config["mode"] == PROJECT_MODE_ORACLE:
-                labeled_indices = np.where(as_data.labels != LABEL_NA)[0]
-                labels = as_data.labels[labeled_indices].tolist()
+                labeled_indices = np.where(as_data.label_included != LABEL_NA)[0]
+                labels = as_data.label_included[labeled_indices].tolist()
                 labeled_record_ids = as_data.record_ids[labeled_indices].tolist()
 
                 # add the labels as prior data

@@ -41,7 +41,7 @@ def test_reader(test_file, n_lines, ignore_col):
     cols = [col for col in cols if col not in ignore_col]
     # if labels is not None:
     #     cols.append('included')
-    #     assert np.array_equal(as_data.labels, labels)
+    #     assert np.array_equal(as_data.label_included, labels)
 
     for col in cols:
         values = as_data.get(col)
@@ -172,4 +172,4 @@ def test_write_data(tmpdir):
     asr_data.to_file(tmp_csv_fp_out)
     asr_data_diff = ASReviewData.from_file(tmp_csv_fp_out)
     # Check if export file includes labels [1,0]
-    assert list(asr_data.labels) == list(asr_data_diff.labels)
+    assert list(asr_data.label_included) == list(asr_data_diff.label_included)

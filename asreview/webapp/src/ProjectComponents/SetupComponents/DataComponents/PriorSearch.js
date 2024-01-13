@@ -143,7 +143,7 @@ const PriorSearch = (props) => {
           {!isFetching &&
             !isError &&
             (data === undefined ||
-              !data?.result.filter((record) => record?.included === -1)
+              !data?.result.filter((record) => record?.label_included === -1)
                 .length) && (
               <Box className={classes.empty}>
                 <Typography
@@ -165,7 +165,7 @@ const PriorSearch = (props) => {
                 <InfoCard info="Label records that you want to use as prior knowledge" />
               </Box>
               {data?.result
-                .filter((record) => record?.included === -1)
+                .filter((record) => record?.label_included === -1)
                 .map((record, index) => (
                   <PriorUnlabeled
                     keyword={keyword}

@@ -519,7 +519,7 @@ def api_search_data(project):  # noqa: F401
                     "authors": record.authors,
                     "keywords": record.keywords,
                     "included": -1,
-                    "label_from_dataset": int(record.included),
+                    "label_from_dataset": int(record.label_included),
                 }
             )
 
@@ -688,7 +688,7 @@ def api_random_prior_papers(project):  # noqa: F401
     as_data = project.read_data()
 
     if subset in ["relevant", "irrelevant", "not_seen"]:
-        indices = as_data.df[as_data.labels == label].index.values
+        indices = as_data.df[as_data.label_included == label].index.values
     else:
         indices = as_data.df.index.values
 
@@ -1382,7 +1382,7 @@ def api_get_document(project):  # noqa: F401
         item["url"] = record.url
 
         # return the debug label
-        item["label_from_dataset"] = record.included
+        item["label_from_dataset"] = record.label_included
 
         item["doc_id"] = new_instance
         pool_empty = False
