@@ -57,9 +57,7 @@ def n_relevant(data):
     int:
         The statistic
     """
-    if data.labels is not None:
-        return len(np.where(data.labels == 1)[0])
-    return None
+    return len(np.where(data.labels == 1)[0])
 
 
 def n_irrelevant(data):
@@ -75,8 +73,6 @@ def n_irrelevant(data):
     int:
         The statistic
     """
-    if data.labels is None:
-        return None
     return len(np.where(data.labels == 0)[0])
 
 
@@ -93,8 +89,6 @@ def n_unlabeled(data):
     int:
         The statistic
     """
-    if data.labels is None:
-        return None
     return len(data.labels) - n_relevant(data) - n_irrelevant(data)
 
 
@@ -113,15 +107,13 @@ def n_missing_title(data):
     """
     n_missing = 0
     if data.title is None:
-        return None, None
-    if data.labels is None:
-        n_missing_included = None
+        return 0, 0
     else:
         n_missing_included = 0
     for i in range(len(data.title)):
         if len(data.title[i]) == 0:
             n_missing += 1
-            if data.labels is not None and data.labels[i] == 1:
+            if data.labels[i] == 1:
                 n_missing_included += 1
     return n_missing, n_missing_included
 
@@ -141,16 +133,14 @@ def n_missing_abstract(data):
     """
     n_missing = 0
     if data.abstract is None:
-        return None, None
-    if data.labels is None:
-        n_missing_included = None
+        return 0, 0
     else:
         n_missing_included = 0
 
     for i in range(len(data.abstract)):
         if len(data.abstract[i]) == 0:
             n_missing += 1
-            if data.labels is not None and data.labels[i] == 1:
+            if data.labels[i] == 1:
                 n_missing_included += 1
 
     return n_missing, n_missing_included

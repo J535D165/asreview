@@ -338,11 +338,14 @@ class ASReviewProject:
         as_data = ASReviewData.from_file(fp_data)
 
         if self.config["mode"] == PROJECT_MODE_SIMULATE and (
-            as_data.labels is None or (as_data.labels == LABEL_NA).any()
+            (as_data.labels == LABEL_NA).any()
         ):
             raise ValueError("Import fully labeled dataset")
 
-        if self.config["mode"] == PROJECT_MODE_EXPLORE and as_data.labels is None:
+        if (
+            self.config["mode"] == PROJECT_MODE_EXPLORE
+            and (as_data.labels != LABEL_NA).any()
+        ):
             raise ValueError("Import partially or fully labeled dataset")
 
         self.update_config(dataset_path=file_name, name=file_name.rsplit(".", 1)[0])
@@ -352,10 +355,7 @@ class ASReviewProject:
             state.add_record_table(as_data.record_ids)
 
             # if the data contains labels and oracle mode, add them to the state file
-            if (
-                self.config["mode"] == PROJECT_MODE_ORACLE
-                and as_data.labels is not None
-            ):
+            if self.config["mode"] == PROJECT_MODE_ORACLE:
                 labeled_indices = np.where(as_data.labels != LABEL_NA)[0]
                 labels = as_data.labels[labeled_indices].tolist()
                 labeled_record_ids = as_data.record_ids[labeled_indices].tolist()

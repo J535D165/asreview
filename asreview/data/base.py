@@ -355,19 +355,8 @@ class ASReviewData:
 
     @property
     def included(self):
+        # deprecate this in the future
         return self.labels
-
-    @included.setter
-    def included(self, labels):
-        self.labels = labels
-
-    @property  # pending deprecation
-    def final_included(self):
-        return self.labels
-
-    @final_included.setter  # pending deprecation
-    def final_included(self, labels):
-        self.labels = labels
 
     @property
     def labels(self):
@@ -375,15 +364,7 @@ class ASReviewData:
             column = self.column_spec["included"]
             return self.df[column].values
         except KeyError:
-            return None
-
-    @labels.setter
-    def labels(self, labels):
-        try:
-            column = self.column_spec["included"]
-            self.df[column] = labels
-        except KeyError:
-            self.df["included"] = labels
+            return np.repeat(LABEL_NA, len(self))
 
     def prior_labels(self, state, by_index=True):
         """Get the labels that are marked as 'prior'.
