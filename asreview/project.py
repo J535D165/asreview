@@ -342,9 +342,8 @@ class ASReviewProject:
         ):
             raise ValueError("Import fully labeled dataset")
 
-        if (
-            self.config["mode"] == PROJECT_MODE_EXPLORE
-            and (as_data.labels != LABEL_NA).any()
+        if self.config["mode"] == PROJECT_MODE_EXPLORE and not (
+            (as_data.labels == 1).any() and (as_data.labels == 0).any()
         ):
             raise ValueError("Import partially or fully labeled dataset")
 
