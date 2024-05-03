@@ -21,7 +21,6 @@ import pandas as pd
 from tqdm import tqdm
 import json
 from pathlib import Path
-from dataclasses import asdict
 
 from asreview.config import DEFAULT_N_INSTANCES
 from asreview.config import LABEL_NA
@@ -29,7 +28,7 @@ from asreview.models.balance.simple import SimpleBalance
 from asreview.models.classifiers import NaiveBayesClassifier
 from asreview.models.feature_extraction.tfidf import Tfidf
 from asreview.models.query.max_prob import MaxQuery
-from asreview.settings import ReviewSettings
+from asreview.settings import ASReviewSettings
 from asreview.simulation.prior_knowledge import naive_prior_knowledge
 from asreview.simulation.prior_knowledge import sample_prior_knowledge
 from asreview.state.contextmanager import open_state
@@ -157,14 +156,14 @@ class Simulate:
             extra_kwargs["n_prior_included"] = self.n_prior_included
         if hasattr(self, "n_prior_excluded"):
             extra_kwargs["n_prior_excluded"] = self.n_prior_excluded
-        return ReviewSettings(
-            classifier=self.classifier.name,
+        return ASReviewSettings(
+            model=self.classifier.name,
             query_strategy=self.query_strategy.name,
             balance_strategy=self.balance_model.name,
             feature_extraction=self.feature_extraction.name,
             n_instances=self.n_instances,
             stop_if=self.stop_if,
-            classifier_param=self.classifier.param,
+            model_param=self.classifier.param,
             query_param=self.query_strategy.param,
             balance_param=self.balance_model.param,
             feature_param=self.feature_extraction.param,
@@ -254,13 +253,10 @@ class Simulate:
                 ),
                 "w",
             ) as f:
-                json.dump(asdict(self.settings), f)
+                json.dump({"settings": self.settings.to_dict()}, f)
 
-            # Add the record table to the state if it is not already there.
-            self.record_table = s.get_record_table()
-            if self.record_table.empty:
-                s.add_record_table(self.as_data.record_ids)
-                self.record_table = s.get_record_table()
+            # Add the record table
+            self.record_table = self.as_data.record_ids
 
             # Make sure the priors are labeled.
             self._label_priors()

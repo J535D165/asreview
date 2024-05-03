@@ -49,7 +49,6 @@ from scipy.sparse import save_npz
 from asreview import load_dataset
 from asreview.config import LABEL_NA
 from asreview.config import PROJECT_MODE_EXPLORE
-from asreview.config import PROJECT_MODE_ORACLE
 from asreview.config import PROJECT_MODE_SIMULATE
 from asreview.config import PROJECT_MODES
 from asreview.config import SCHEMA
@@ -57,6 +56,7 @@ from asreview.exceptions import CacheDataError
 from asreview.settings import ReviewSettings
 from asreview.state.sqlstate import SQLiteState
 from asreview.utils import asreview_path
+
 
 try:
     from asreview._version import __version__
@@ -291,37 +291,26 @@ class Project:
 
         self.update_config(dataset_path=file_name, name=file_name.rsplit(".", 1)[0])
 
-        state = SQLiteState()
+        # with open_state(self) as state:
+        #     # save the record ids in the state file
+        #     state.add_record_table(as_data.record_ids)
 
-        try:
-            review_id = uuid4().hex
-            state._create_new_state_file(self.project_path, review_id)
-            self.add_review(review_id)
+        #     # if the data contains labels and oracle mode, add them to the state file
+        #     if (
+        #         self.config["mode"] == PROJECT_MODE_ORACLE
+        #         and as_data.labels is not None
+        #     ):
+        #         labeled_indices = np.where(as_data.labels != LABEL_NA)[0]
+        #         labels = as_data.labels[labeled_indices].tolist()
+        #         labeled_record_ids = as_data.record_ids[labeled_indices].tolist()
 
-            # save the record ids in the state file
-            state.add_record_table(as_data.record_ids)
-
-            # if the data contains labels and oracle mode, add them to the state file
-            if (
-                self.config["mode"] == PROJECT_MODE_ORACLE
-                and as_data.labels is not None
-            ):
-                labeled_indices = np.where(as_data.labels != LABEL_NA)[0]
-                labels = as_data.labels[labeled_indices].tolist()
-                labeled_record_ids = as_data.record_ids[labeled_indices].tolist()
-
-                # add the labels as prior data
-                state.add_labeling_data(
-                    record_ids=labeled_record_ids,
-                    labels=labels,
-                    notes=[None for _ in labeled_record_ids],
-                    prior=True,
-                )
-        finally:
-            try:
-                state.close()
-            except AttributeError:
-                pass
+        #         # add the labels as prior data
+        #         state.add_labeling_data(
+        #             record_ids=labeled_record_ids,
+        #             labels=labels,
+        #             notes=[None for _ in labeled_record_ids],
+        #             prior=True,
+        #         )
 
     def remove_dataset(self):
         """Remove dataset from project."""
@@ -485,40 +474,52 @@ class Project:
         except Exception:
             return []
 
-    def add_review(self, review_id, start_time=None, status="setup"):
+    def new_review(
+        self, settings=None, start_time=None, status="setup", fill_record_table=True
+    ):
         """Add new review metadata.
 
         Arguments
         ---------
-        review_id: str
-            The review_id uuid4.
-        status: str
-            The status of the review. One of 'setup', 'running',
-            'finished'.
         start_time:
             Start of the review.
-
+        status: str
+            The status of the review. One of 'setup', 'review',
+            'finished'.
         """
-        if start_time is None:
-            start_time = datetime.now()
 
-        config = self.config
+        # create folder for review
+        review_id = uuid4().hex
+        Path(self.project_path, "reviews", review_id).mkdir(parents=True)
 
-        asreview_settings = ReviewSettings()
+        # create the state
+        state = SQLiteState()
+        state._init_state_db(self.project_path, review_id)
+        if fill_record_table:
+            as_data = self.read_data()
+            state.add_record_table(as_data.record_ids)
+        state.close()
+
+        # add or create settings
+        if not settings:
+            settings = ReviewSettings()
 
         with open(
             Path(self.project_path, "reviews", review_id, "settings_metadata.json"), "w"
         ) as f:
-            json.dump(asdict(asreview_settings), f)
+            json.dump(asdict(settings), f)
+
+        # add metadata to project.json file
+        if start_time is None:
+            start_time = datetime.now()
 
         review_config = {
             "id": review_id,
             "start_time": str(start_time),
             "status": status,
-            # "end_time": datetime.now()
         }
 
-        # add container for reviews
+        config = self.config
         if "reviews" not in config:
             config["reviews"] = []
 

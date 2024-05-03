@@ -51,6 +51,7 @@ from asreview.data.statistics import n_duplicates
 from asreview.data.statistics import n_relevant
 from asreview.data.statistics import n_irrelevant
 
+from asreview.config import PROJECT_MODE_ORACLE
 from asreview.datasets import DatasetManager
 from asreview.exceptions import BadFileFormatError
 from asreview.models.balance import list_balance_strategies
@@ -236,6 +237,22 @@ def api_create_project():  # noqa: F401
 
     try:
         project.add_dataset(data_path.name)
+        project.new_review()
+
+        # if the data contains labels and oracle mode, add them to the state file
+        if project.config["mode"] == PROJECT_MODE_ORACLE:
+            as_data = project.read_data()
+
+            if as_data.labels is not None:
+                labeled_indices = np.where(as_data.labels != LABEL_NA)[0]
+                labels = as_data.labels[labeled_indices].tolist()
+
+                with open_state(project) as state:
+                    state.add_labeling_data(
+                        record_ids=as_data.record_ids[labeled_indices].tolist(),
+                        labels=labels,
+                        prior=True,
+                    )
 
     except Exception as err:
         try:
@@ -1084,76 +1101,8 @@ def export_project(project):
     )
 
 
-def _get_stats(project, include_priors=False):
-    if is_v0_project(project.project_path):
-        json_fp = Path(project.project_path, "result.json")
-
-        # Check if the v0 project is in review.
-        if json_fp.exists():
-            with open(json_fp) as f:
-                s = json.load(f)
-
-            # Get the labels.
-            labels = np.array(
-                [
-                    int(sample_data[1])
-                    for query in range(len(s["results"]))
-                    for sample_data in s["results"][query]["labelled"]
-                ]
-            )
-
-            # Get the record table.
-            data_hash = list(s["data_properties"].keys())[0]
-            record_table = s["data_properties"][data_hash]["record_table"]
-
-            n_records = len(record_table)
-
-        # No result found.
-        else:
-            labels = np.array([])
-            n_records = 0
-    else:
-        # Check if there is a review started in the project.
-        try:
-            # get label history
-            with open_state(project.project_path) as s:
-                if (
-                    project.config["reviews"][0]["status"] == "finished"
-                    and project.config["mode"] == PROJECT_MODE_SIMULATE
-                ):
-                    labels = _get_labels(s, priors=include_priors)
-                else:
-                    labels = s.get_labels(priors=include_priors)
-
-                n_records = s.n_records
-
-        # No state file found or not init.
-        except (StateNotFoundError, StateError):
-            labels = np.array([])
-            n_records = 0
-
-    n_included = int(sum(labels == 1))
-    n_excluded = int(sum(labels == 0))
-
-    if n_included > 0:
-        n_since_last_relevant = int(labels.tolist()[::-1].index(1))
-    else:
-        n_since_last_relevant = 0
-
-    return {
-        "n_included": n_included,
-        "n_excluded": n_excluded,
-        "n_since_last_inclusion": n_since_last_relevant,
-        "n_papers": n_records,
-        "n_pool": n_records - n_excluded - n_included,
-    }
-
-
 def _get_labels(state_obj, priors=False):
-    # get the number of records
     n_records = state_obj.n_records
-
-    # get the labels
     labels = state_obj.get_labels(priors=priors).to_list()
 
     # if less labels than records, fill with 0
@@ -1171,10 +1120,38 @@ def api_get_progress_info(project):  # noqa: F401
 
     include_priors = request.args.get("priors", True, type=bool)
 
-    response = jsonify(_get_stats(project, include_priors=include_priors))
+    if is_v0_project(project.project_path):
+        raise Exception("Project too old to get statistics from. Update project first.")
 
-    # return a success response to the client.
-    return response
+    # get label history
+    with open_state(project.project_path) as s:
+        if (
+            project.config["reviews"][0]["status"] == "finished"
+            and project.config["mode"] == PROJECT_MODE_SIMULATE
+        ):
+            labels = _get_labels(s, priors=include_priors)
+        else:
+            labels = s.get_labels(priors=include_priors)
+
+        n_records = s.n_records
+
+    n_included = int(sum(labels == 1))
+    n_excluded = int(sum(labels == 0))
+
+    if n_included > 0:
+        n_since_last_relevant = int(labels.tolist()[::-1].index(1))
+    else:
+        n_since_last_relevant = 0
+
+    return jsonify(
+        {
+            "n_included": n_included,
+            "n_excluded": n_excluded,
+            "n_since_last_inclusion": n_since_last_relevant,
+            "n_papers": n_records,
+            "n_pool": n_records - n_excluded - n_included,
+        }
+    )
 
 
 @bp.route("/projects/<project_id>/progress_density", methods=["GET"])
@@ -1247,7 +1224,7 @@ def api_get_progress_recall(project):
         else:
             data = s.get_labels(priors=include_priors)
 
-        n_records = len(s.get_record_table())
+        n_records = s.n_records
 
     # create a dataset with the cumulative number of inclusions
     df = data.to_frame(name="Relevant").reset_index(drop=True).cumsum()

@@ -193,13 +193,21 @@ def test_n_priors(asreview_test_project):
 
 
 def test_create_new_state_file(tmpdir):
-    project = asr.Project.create(Path(tmpdir, "test.asreview"))
+    project_path = Path(tmpdir, "test.asreview")
+    project = asr.Project.create(project_path)
+    # project.add_dataset("demo.csv")
+    project.new_review(fill_record_table=False)
+
     with open_state(project) as state:
         state._is_valid_state()
 
-    review_id = project.reviews[0]["id"]
     ReviewSettings().from_file(
-        Path(project.project_path, "reviews", review_id, "settings_metadata.json")
+        Path(
+            project.project_path,
+            "reviews",
+            project.reviews[0]["id"],
+            "settings_metadata.json",
+        )
     )
 
 
@@ -242,7 +250,9 @@ def test_get_dataset_drop_pending(tmpdir):
     record_table = range(1, 11)
     test_ranking = range(10, 0, -1)
     project_path = Path(tmpdir, "test.asreview")
-    asr.Project.create(project_path)
+    project = asr.Project.create(project_path)
+    project.new_review(fill_record_table=False)
+
     with open_state(project_path) as state:
         state.add_record_table(record_table)
         state.add_last_ranking(test_ranking, "nb", "max", "double", "tfidf", 4)
@@ -332,7 +342,8 @@ def test_record_table(tmpdir):
     as_data = load_dataset(data_fp)
 
     project_path = Path(tmpdir, "test.asreview")
-    asr.Project.create(project_path)
+    project = asr.Project.create(project_path)
+    project.new_review(fill_record_table=False)
 
     with open_state(project_path) as state:
         state.add_record_table(as_data.record_ids)
@@ -365,6 +376,7 @@ def test_add_last_probabilities(asreview_test_project):
 def test_move_ranking_data_to_results(tmpdir):
     project_path = Path(tmpdir, "test.asreview")
     asr.Project.create(project_path)
+
     with open_state(project_path) as state:
         state.add_record_table(TEST_RECORD_TABLE)
         state.add_last_ranking(

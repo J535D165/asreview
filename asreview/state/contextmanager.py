@@ -17,7 +17,6 @@ import tempfile
 import zipfile
 from contextlib import contextmanager
 from pathlib import Path
-from uuid import uuid4
 
 from asreview.project import Project
 from asreview.project import is_project, ProjectNotFoundError, ProjectError
@@ -61,23 +60,23 @@ def open_state(asreview_obj, review_id=None, create_new=True):
     else:
         raise ProjectError("Unknown project type.")
 
-    # init state class
     state = SQLiteState()
 
     try:
-        if len(project.reviews) > 0:
-            if review_id is None:
+        if create_new and len(project.reviews) == 0:
+            logging.debug("Create new review.")
+            project.new_review()
+
+        if review_id is None:
+            try:
                 review_id = project.config["reviews"][0]["id"]
-            logging.debug(f"Opening review {review_id}.")
-            state._restore(project.project_path, review_id)
-        elif create_new and len(project.reviews) == 0:
-            review_id = uuid4().hex
-            logging.debug(f"Create new review (state) with id {review_id}.")
-            state._create_new_state_file(project.project_path, review_id)
-            project.add_review(review_id)
-        else:
-            raise StateNotFoundError("State does not exist in the project")
+            except IndexError:
+                raise StateNotFoundError("State does not exist in the project")
+
+        state._restore(project.project_path, review_id)
+
         yield state
+
     finally:
         try:
             state.close()

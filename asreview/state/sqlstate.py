@@ -98,7 +98,7 @@ class SQLiteState(BaseState):
 
         return Path(self.review_dir, "results.sql")
 
-    def _create_new_state_file(self, working_dir, review_id):
+    def _init_state_db(self, working_dir, review_id):
         """Create the files for storing a new state given an review_id.
 
         Arguments
@@ -321,11 +321,6 @@ class SQLiteState(BaseState):
         probabilities: list, np.array
             List containing the relevance scores for every record.
         """
-
-        if self.n_records != len(probabilities):
-            raise ValueError(
-                "The number of probabilities should be equal to the number of records."
-            )
 
         pd.DataFrame({"proba": probabilities}).to_sql(
             "last_probabilities", self._conn(), if_exists="replace", index=False

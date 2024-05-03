@@ -29,7 +29,7 @@ class BaseState(ABC):
         self.close()
 
     @abstractmethod
-    def _create_new_state_file(self, working_dir, review_id):
+    def _init_state_db(self, working_dir, review_id):
         """Create empty internal structure for state.
 
         Arguments

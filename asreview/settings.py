@@ -34,11 +34,7 @@ from asreview.config import DEFAULT_QUERY_STRATEGY
 
 @dataclass
 class ReviewSettings:
-    """Object to store the configuration of a review session.
-
-    The main difference being that it type checks (some)
-    of its contents.
-    """
+    """Dataclass for the configuration of a review session."""
 
     classifier: str = DEFAULT_CLASSIFIER
     query_strategy: str = DEFAULT_QUERY_STRATEGY
